@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infografis Interaktif: Dasar Videografi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F9FA;
+            color: #212529;
+        }
+
+        /* Color Palette (Brilliant Blues) */
+        :root {
+            --color-primary: #0B2F4A; /* Deep Blue */
+            --color-secondary: #01579B; /* Medium Blue */
+            --color-tertiary: #03A9F4; /* Light Blue */
+            --color-accent: #7A5195;   /* Purple Accent */
+        }
+
+        h1, h2, h3 {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+
+        h2 {
+            border-bottom: 3px solid var(--color-tertiary);
+            padding-bottom: 8px;
+            display: inline-block;
+        }
+
+        .card {
+            background-color: #ffffff;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 4px solid transparent;
+            color: #495057;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            background-color: #E9ECEF;
+        }
+
+        .tab-btn.active {
+            color: var(--color-secondary);
+            border-bottom-color: var(--color-secondary);
+        }
+
+        .tab-panel {
+            display: none; /* Dikelola oleh JS */
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        /* --- CSS Diagrams (No SVG/Images) --- */
+
+        .diagram-container {
+            height: 180px;
+            background-color: #F1F3F5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0.25rem;
+            border: 1px solid #DEE2E6;
+        }
+
+        /* Aperture */
+        .aperture-viz { display: flex; gap: 1.5rem; align-items: center; }
+        .f-stop { display: flex; flex-direction: column; align-items: center; font-weight: 600; }
+        .aperture-circle {
+            border-radius: 50%;
+            background-color: #495057;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .aperture-hole {
+            border-radius: 50%;
+            background-color: #F1F3F5;
+            transition: all 0.3s ease;
+        }
+
+        /* Shutter Speed */
+        .shutter-viz { display: flex; gap: 1.5rem; align-items: center; }
+        .shutter-block {
+            width: 80px;
+            height: 60px;
+            background-color: var(--color-accent);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+        .motion-blur {
+            filter: blur(3px);
+            opacity: 0.8;
+        }
+
+        /* ISO */
+        .iso-viz { display: flex; gap: 1.5rem; align-items: center; }
+        .iso-block {
+            width: 80px;
+            height: 60px;
+            background-color: var(--color-secondary);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+        .noise-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' viewBox='0 0 6 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23FFFFFF' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M5 0h1L0 6V5zM6 5v1H5z'/%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Rule of Thirds */
+        .rule-of-thirds-grid {
+            width: 140px;
+            height: 100px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            border: 2px solid var(--color-secondary);
+            position: relative;
+        }
+        .rot-line {
+            position: absolute;
+            background-color: var(--color-secondary);
+            opacity: 0.5;
+        }
+        .rot-line.v1 { left: 33.33%; top: 0; width: 2px; height: 100%; }
+        .rot-line.v2 { left: 66.66%; top: 0; width: 2px; height: 100%; }
+        .rot-line.h1 { left: 0; top: 33.33%; width: 100%; height: 2px; }
+        .rot-line.h2 { left: 0; top: 66.66%; width: 100%; height: 2px; }
+        .rot-point {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--color-accent);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Shot Types */
+        .shot-frame {
+            width: 120px;
+            height: 140px;
+            border: 3px solid var(--color-primary);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            overflow: hidden;
+            background: #E9ECEF;
+        }
+        .person-figure {
+            position: absolute;
+            background: var(--color-secondary);
+        }
+        .person-head {
+            width: 20px;
+            height: 20px;
+            background: var(--color-secondary);
+            border-radius: 50%;
+            margin: 0 auto;
+            position: relative;
+            top: 4px; /* offset for neck */
+        }
+        .person-body {
+            width: 30px;
+            height: 50px;
+            background: var(--color-secondary);
+            border-radius: 10px 10px 0 0;
+        }
+        /* EWS */
+        .shot-frame.ews .person-figure { transform: scale(0.2) translateY(-200px); }
+        /* LS */
+        .shot-frame.ls .person-figure { transform: scale(0.8) translateY(-10px); }
+        /* MS */
+        .shot-frame.ms .person-figure { transform: scale(1.2) translateY(30px); }
+        /* MCU */
+        .shot-frame.mcu .person-figure { transform: scale(1.6) translateY(55px); }
+        /* CU */
+        .shot-frame.cu .person-figure { transform: scale(2.5) translateY(80px); }
+        /* ECU */
+        .shot-frame.ecu .person-head { transform: scale(2.5) translateY(40px); }
+        .shot-frame.ecu .person-body { display: none; }
+
+        /* 3-Point Lighting */
+        .lighting-setup {
+            width: 200px;
+            height: 150px;
+            position: relative;
+        }
+        .light-source, .light-subject, .light-camera {
+            position: absolute;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+        .light-subject {
+            width: 50px;
+            height: 50px;
+            background: var(--color-secondary);
+            color: white;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        .light-source {
+            width: 40px;
+            height: 40px;
+            border: 3px solid;
+        }
+        .light-key {
+            border-color: #F9E79F;
+            background-color: rgba(249, 231, 159, 0.3);
+            top: 20%;
+            left: 10%;
+        }
+        .light-fill {
+            border-color: #AED6F1;
+            background-color: rgba(174, 214, 241, 0.3);
+            top: 20%;
+            right: 10%;
+        }
+        .light-back {
+            border-color: #E8DAEF;
+            background-color: rgba(232, 218, 239, 0.3);
+            top: 60%;
+            left: 5%;
+            z-index: 5;
+        }
+        .light-camera {
+            width: 40px;
+            height: 30px;
+            background: #495057;
+            color: white;
+            border-radius: 4px;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="text-center p-8 md:p-12" style="background-color: var(--color-primary);">
+        <h1 class="text-4xl md:text-5xl font-bold text-white">Dasar-Dasar Videografi</h1>
+        <p class="text-xl text-gray-200 mt-2">Panduan Interaktif untuk Siswa DKV Kelas X</p>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8 max-w-7xl">
+
+        <!-- 1. Tiga Pilar Exposure -->
+        <section id="exposure" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8">1. Tiga Pilar Exposure</h2>
+            <div class="card max-w-4xl mx-auto">
+                <div class="flex flex-col md:flex-row border-b border-gray-200">
+                    <button class="tab-btn active flex-1" data-tab="aperture">
+                        <span class="text-2xl mr-2">☀️</span> Aperture
+                    </button>
+                    <button class="tab-btn flex-1" data-tab="shutter">
+                        <span class="text-2xl mr-2">⏱️</span> Shutter Speed
+                    </button>
+                    <button class="tab-btn flex-1" data-tab="iso">
+                        <span class="text-2xl mr-2">🎞️</span> ISO
+                    </button>
+                </div>
+                
+                <div class="p-6 md:p-8">
+                    <!-- Aperture Panel -->
+                    <div id="tab-aperture" class="tab-panel" style="display: block;">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                            <div>
+                                <h3 class="text-2xl font-bold mb-3" style="color: var(--color-secondary);">Aperture (Bukaan Lensa)</h3>
+                                <p class="mb-2"><strong>Fungsi:</strong> Mengontrol seberapa BANYAK cahaya yang masuk.</p>
+                                <p class="mb-4"><strong>Efek Samping:</strong> Mengatur <strong>Depth of Field (DoF)</strong> atau kedalaman ruang.</p>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li><strong>f/1.8 (Kecil):</strong> Bukaan BESAR = Latar belakang BLUR (bokeh).</li>
+                                    <li><strong>f/16 (Besar):</strong> Bukaan KECIL = Latar belakang TAJAM.</li>
+                                </ul>
+                            </div>
+                            <div class="diagram-container aperture-viz">
+                                <div class="f-stop">
+                                    <div class="aperture-circle" style="width: 80px; height: 80px;">
+                                        <div class="aperture-hole" style="width: 50px; height: 50px;"></div>
+                                    </div>
+                                    <span>f/1.8 (Blur)</span>
+                                </div>
+                                <div class="f-stop">
+                                    <div class="aperture-circle" style="width: 80px; height: 80px;">
+                                        <div class="aperture-hole" style="width: 10px; height: 10px;"></div>
+                                    </div>
+                                    <span>f/16 (Tajam)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Shutter Speed Panel -->
+                    <div id="tab-shutter" class="tab-panel">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                            <div>
+                                <h3 class="text-2xl font-bold mb-3" style="color: var(--color-secondary);">Shutter Speed (Kecepatan Rana)</h3>
+                                <p class="mb-2"><strong>Fungsi:</strong> Mengontrol seberapa LAMA sensor "melihat" cahaya.</p>
+                                <p class="mb-4"><strong>Efek Samping:</strong> Mengatur <strong>Motion Blur</strong> (efek blur pada gerakan).</p>
+                                <p class="font-bold text-red-600">Aturan 180°: Shutter Speed = 2x Frame Rate!</p>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li><strong>24 fps</strong> ➔ <strong>1/50 detik</strong> (Alami)</li>
+                                    <li><strong>30 fps</strong> ➔ <strong>1/60 detik</strong> (Alami)</li>
+                                </ul>
+                            </div>
+                            <div class="diagram-container shutter-viz">
+                                <div class="shutter-block">
+                                    <span>1/1000</span>
+                                    <span>(Beku)</span>
+                                </div>
+                                <div class="shutter-block motion-blur">
+                                    <span>1/30</span>
+                                    <span>(Blur)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ISO Panel -->
+                    <div id="tab-iso" class="tab-panel">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                            <div>
+                                <h3 class="text-2xl font-bold mb-3" style="color: var(--color-secondary);">ISO</h3>
+                                <p class="mb-2"><strong>Fungsi:</strong> Mengatur SENSITIVITAS sensor (secara digital).</p>
+                                <p class="mb-4"><strong>Efek Samping:</strong> Semakin tinggi ISO, semakin banyak <strong>Noise/Grain</strong> (bintik).</p>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li><strong>ISO 100:</strong> Gambar bersih, butuh banyak cahaya.</li>
+                                    <li><strong>ISO 3200:</strong> Gambar terang, tapi muncul noise.</li>
+                                    <li><strong>Aturan:</strong> Gunakan ISO serendah mungkin!</li>
+                                </ul>
+                            </div>
+                            <div class="diagram-container iso-viz">
+                                <div class="iso-block">
+                                    <span>ISO 100</span>
+                                </div>
+                                <div class="iso-block">
+                                    <span>ISO 3200</span>
+                                    <div class="noise-overlay"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Frame Rate & Shutter Speed Rule -->
+        <section id="framerate" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8">2. Frame Rate & Aturan 180 Derajat</h2>
+            <div class="card p-6 md:p-8">
+                <p class="text-center text-lg max-w-2xl mx-auto mb-6">Bagan ini menunjukkan hubungan ideal antara Frame Rate (FPS) dan Shutter Speed (Aturan 180°) untuk mendapatkan *motion blur* yang terlihat sinematik dan alami.</p>
+                <div class="chart-container">
+                    <canvas id="frameRateChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Komposisi -->
+        <section id="composition" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8">3. Komposisi Pengambilan Gambar</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Rule of Thirds -->
+                <div class="card">
+                    <div class="diagram-container">
+                        <div class="rule-of-thirds-grid">
+                            <div class="rot-line v1"></div>
+                            <div class="rot-line v2"></div>
+                            <div class="rot-line h1"></div>
+                            <div class="rot-line h2"></div>
+                            <div class="rot-point" style="top: 33.33%; left: 33.33%;"></div>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold mb-2">Rule of Thirds</h3>
+                        <p class="text-sm">Letakkan subjek di titik persimpangan garis 3x3 imajiner untuk tampilan yang seimbang dan menarik.</p>
+                    </div>
+                </div>
+                <!-- Headroom -->
+                <div class="card">
+                    <div class="diagram-container" style="flex-direction: column; gap: 10px;">
+                        <div style="width: 140px; height: 100px; border: 2px solid #ADB5BD; position: relative;">
+                            <div style="width: 40px; height: 40px; background: var(--color-accent); border-radius: 50%; position: absolute; top: 10px; left: 50%; transform: translateX(-50%);"></div>
+                            <span style="position: absolute; top: 55px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; color: #6C757D;">Headroom</span>
+                        </div>
+                        <span class="font-semibold">Benar (Ada Headroom)</span>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold mb-2">Headroom</h3>
+                        <p class="text-sm">Beri sedikit ruang kosong di atas kepala subjek. Jangan terlalu banyak atau terlalu sempit.</p>
+                    </div>
+                </div>
+                <!-- Looking Room -->
+                <div class="card">
+                    <div class="diagram-container">
+                         <div style="width: 140px; height: 100px; border: 2px solid #ADB5BD; position: relative;">
+                            <div style="width: 40px; height: 40px; background: var(--color-accent); border-radius: 50%; position: absolute; top: 30px; left: 20px;"></div>
+                            <span style="position: absolute; top: 38px; left: 80px; font-size: 2rem; color: #6C757D;">→</span>
+                         </div>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold mb-2">Looking Room</h3>
+                        <p class="text-sm">Beri ruang lebih di depan arah pandang subjek. Ini memberi "ruang bernapas" pada komposisi.</p>
+                    </div>
+                </div>
+                <!-- Leading Lines -->
+                <div class="card">
+                    <div class="diagram-container" style="position: relative; overflow: hidden;">
+                        <div style="width: 10px; height: 120px; background: #ADB5BD; transform: skewX(-20deg) translateX(-30px);"></div>
+                        <div style="width: 10px; height: 120px; background: #ADB5BD; transform: skewX(20deg) translateX(30px);"></div>
+                        <div style="width: 25px; height: 25px; background: var(--color-accent); border-radius: 50%; position: absolute; top: 30px;"></div>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold mb-2">Leading Lines</h3>
+                        <p class="text-sm">Gunakan garis alami di lingkungan (jalan, pagar) untuk mengarahkan mata penonton ke subjek utama.</p>
+                    </div>
+                </div>
+                <!-- Framing -->
+                <div class="card">
+                    <div class="diagram-container">
+                        <div style="width: 140px; height: 100px; background: #495057; display: flex; justify-content: center; align-items: center;">
+                            <div style="width: 100px; height: 70px; background: #F1F3F5; display: flex; justify-content: center; align-items: center;">
+                                <div style="width: 30px; height: 30px; background: var(--color-accent); border-radius: 50%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-5">
+                        <h3 class="text-xl font-bold mb-2">Framing</h3>
+                        <p class="text-sm">Gunakan elemen latar depan (jendela, pintu) untuk "membingkai" subjek dan memberi kedalaman.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 4. Jenis Shot -->
+        <section id="shot-types" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8">4. Jenis-Jenis Shot (Ukuran Framing)</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
+                <!-- EWS -->
+                <div class="card text-center">
+                    <div class="diagram-container">
+                        <div class="shot-frame ews"><div class="person-figure"><div class="person-head"></div><div class="person-body"></div></div></div>
+                    </div>
+                    <div class="p-4"><h3 class="font-bold">Extreme Wide Shot (EWS)</h3><p class="text-sm">Lokasi</p></div>
+                </div>
+                <!-- LS -->
+                <div class="card text-center">
+                    <div class="diagram-container">
+                        <div class="shot-frame ls"><div class="person-figure"><div class="person-head"></div><div class="person-body"></div></div></div>
+                    </div>
+                    <div class="p-4"><h3 class="font-bold">Long Shot (LS)</h3><p class="text-sm">Seluruh Tubuh</p></div>
+                </div>
+                <!-- MS -->
+                <div class="card text-center">
+                    <div class="diagram-container">
+                        <div class="shot-frame ms"><div class="person-figure"><div class="person-head"></div><div class="person-body"></div></div></div>
+                    </div>
+                    <div class="p-4"><h3 class="font-bold">Medium Shot (MS)</h3><p class="text-sm">Pinggang ke Atas</p></div>
+                </div>
+                <!-- MCU -->
+                <div class="card text-center">
+                    <div class="diagram-container">
+                        <div class="shot-frame mcu"><div class="person-figure"><div class="person-head"></div><div class="person-body"></div></div></div>
+                    </div>
+                    <div class="p-4"><h3 class="font-bold">Medium Close-Up (MCU)</h3><p class="text-sm">Dada ke Atas</p></div>
+                </div>
+                <!-- CU -->
+                <div class="card text-center">
+                    <div class="diagram-container">
+                        <div class="shot-frame cu"><div class="person-figure"><div class="person-head"></div><div class="person-body"></div></div></div>
+                    </div>
+                    <div class="p-4"><h3 class="font-bold">Close-Up (CU)</h3><p class="text-sm">Wajah Penuh</p></div>
+                </div>
+                <!-- ECU -->
+                <div class="card text-center">
+                    <div class="diagram-container">
+                        <div class="shot-frame ecu"><div class="person-figure"><div class="person-head"></div><div class="person-body"></div></div></div>
+                    </div>
+                    <div class="p-4"><h3 class="font-bold">Extreme Close-Up (ECU)</h3><p class="text-sm">Detail</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Camera Movement -->
+        <section id="movement" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8">5. Teknik Pergerakan Kamera</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="card p-5 flex items-center space-x-4">
+                    <span class="text-4xl"> tripod </span>
+                    <div>
+                        <h3 class="text-xl font-bold">Statis (Tripod)</h3>
+                        <p class="text-sm">Kamera diam. Paling dasar, penting, dan terlihat profesional.</p>
+                    </div>
+                </div>
+                <div class="card p-5 flex items-center space-x-4">
+                    <span class="text-4xl">↔️</span>
+                    <div>
+                        <h3 class="text-xl font-bold">Pan (Kanan/Kiri)</h3>
+                        <p class="text-sm">Kamera berputar horizontal di atas tripod.</p>
+                    </div>
+                </div>
+                <div class="card p-5 flex items-center space-x-4">
+                    <span class="text-4xl">↕️</span>
+                    <div>
+                        <h3 class="text-xl font-bold">Tilt (Atas/Bawah)</h3>
+                        <p class="text-sm">Kamera berputar vertikal di atas tripod.</p>
+                    </div>
+                </div>
+                <div class="card p-5 flex items-center space-x-4">
+                    <span class="text-4xl">🚶➡️</span>
+                    <div>
+                        <h3 class="text-xl font-bold">Dolly (Maju/Mundur)</h3>
+                        <p class="text-sm">Fisik kamera bergerak maju atau mundur. (Bukan di-zoom!)</p>
+                    </div>
+                </div>
+                <div class="card p-5 flex items-center space-x-4">
+                    <span class="text-4xl">🚶 sideways </span>
+                    <div>
+                        <h3 class="text-xl font-bold">Truck / Tracking</h3>
+                        <p class="text-sm">Fisik kamera bergerak ke samping, sejajar dengan subjek.</p>
+                    </div>
+                </div>
+                <div class="card p-5 flex items-center space-x-4">
+                    <span class="text-4xl"> shaky </span>
+                    <div>
+                        <h3 class="text-xl font-bold">Handheld (Genggam)</h3>
+                        <p class="text-sm">Merekam dengan tangan. Butuh latihan atau alat bantu (gimbal).</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. Audio & Lighting -->
+        <section id="pro-tips" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8">6. Tips Profesional: Audio & Lighting</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Audio -->
+                <div class="card p-6 md:p-8">
+                    <h3 class="text-2xl font-bold mb-4 text-center">Audio adalah Kunci!</h3>
+                    <p class="text-center mb-4">Penonton bisa memaafkan gambar jelek, tapi tidak dengan audio jelek.</p>
+                    <div class="space-y-3">
+                        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded">
+                            <h4 class="font-bold">JANGAN</h4>
+                            <p class="text-sm">Gunakan Mic Internal Kamera. Kualitasnya buruk dan menangkap semua suara.</p>
+                        </div>
+                        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded">
+                            <h4 class="font-bold">LAKUKAN</h4>
+                            <ul class="list-disc list-inside text-sm space-y-1">
+                                <li>Gunakan Mic Eksternal (Clip-on atau Shotgun).</li>
+                                <li>Selalu pakai Headphone untuk memonitor suara.</li>
+                                <li>Pastikan level suara tidak "pecah" (clipping).</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Lighting -->
+                <div class="card p-6 md:p-8">
+                    <h3 class="text-2xl font-bold mb-4 text-center">Three-Point Lighting</h3>
+                    <p class="text-center mb-4">Teknik dasar pencahayaan di studio untuk subjek yang terlihat profesional.</p>
+                    <div class="diagram-container">
+                        <div class="lighting-setup">
+                            <div class="light-source light-key" title="Key Light">Key</div>
+                            <div class="light-source light-fill" title="Fill Light">Fill</div>
+                            <div class="light-source light-back" title="Back Light">Back</div>
+                            <div class="light-subject">Subjek</div>
+                            <div class="light-camera">📷</div>
+                        </div>
+                    </div>
+                    <ul class="mt-4 text-sm space-y-1">
+                        <li><strong>1. Key Light:</strong> Cahaya utama (paling terang).</li>
+                        <li><strong>2. Fill Light:</strong> Cahaya pengisi (lebih redup), mengisi bayangan.</li>
+                        <li><strong>3. Back Light:</strong> Cahaya dari belakang, memisahkan subjek dari background.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="text-center p-6 bg-gray-200 mt-12">
+        <p class="text-gray-700">Materi disiapkan untuk DKV Kelas X - SMK Negeri 4 Samarinda</p>
+    </footer>
+
+    <script>
+        window.onload = function () {
+            
+            // --- Logic untuk Tab Interaktif ---
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabPanels = document.querySelectorAll('.tab-panel');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTab = button.dataset.tab;
+
+                    // Nonaktifkan semua tombol
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    // Aktifkan tombol yang diklik
+                    button.classList.add('active');
+
+                    // Sembunyikan semua panel
+                    tabPanels.forEach(panel => {
+                        panel.style.display = 'none';
+                    });
+
+                    // Tampilkan panel yang ditarget
+                    document.getElementById('tab-' + targetTab).style.display = 'block';
+                });
+            });
+
+            // --- Logic untuk Chart.js (Frame Rate Chart) ---
+            const ctx = document.getElementById('frameRateChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Film Sinematik', 'Video Online', 'Slow Motion'],
+                    datasets: [
+                        {
+                            label: 'Frame Rate (fps)',
+                            data: [24, 30, 60],
+                            backgroundColor: 'rgba(3, 169, 244, 0.7)', // --color-tertiary
+                            borderColor: 'rgba(3, 169, 244, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Shutter Speed Ideal (1/x detik)',
+                            data: [50, 60, 120],
+                            backgroundColor: 'rgba(122, 81, 149, 0.7)', // --color-accent
+                            borderColor: 'rgba(122, 81, 149, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Nilai (fps atau 1/x detik)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Perbandingan Frame Rate vs Shutter Speed (Aturan 180°)',
+                            padding: 20,
+                            font: {
+                                size: 16
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: function(tooltipItems) {
+                                    const item = tooltipItems[0];
+                                    let label = item.chart.data.labels[item.dataIndex];
+                                    if (Array.isArray(label)) {
+                                      return label.join(' ');
+                                    } else {
+                                      return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        };
+    </script>
+
+</body>
+</html>
